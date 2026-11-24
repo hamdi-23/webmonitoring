@@ -47,6 +47,7 @@ class MonitorPagesTest extends TestCase
             'method' => 'get',
             'interval_minutes' => 5,
             'timeout_seconds' => 10,
+            'failure_threshold' => 2,
             'is_active' => '1',
         ]);
 
@@ -77,9 +78,10 @@ class MonitorPagesTest extends TestCase
 
         $this->put(route('monitors.update', $monitor), [
             'name' => 'Baru', 'url' => 'https://example.org', 'method' => 'HEAD',
-            'interval_minutes' => 10, 'timeout_seconds' => 5, 'is_active' => '1',
+            'interval_minutes' => 10, 'timeout_seconds' => 5, 'failure_threshold' => 3, 'is_active' => '1',
         ])->assertRedirect(route('monitors.show', $monitor));
         $this->assertSame('Baru', $monitor->fresh()->name);
+        $this->assertSame(3, $monitor->fresh()->failure_threshold);
 
         $this->post(route('monitors.toggle', $monitor));
         $this->assertFalse($monitor->fresh()->is_active);

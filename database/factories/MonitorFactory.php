@@ -19,6 +19,7 @@ class MonitorFactory extends Factory
             'method' => 'GET',
             'interval_minutes' => 5,
             'timeout_seconds' => 10,
+            'failure_threshold' => 1,
             'is_active' => true,
         ];
     }
@@ -37,6 +38,8 @@ class MonitorFactory extends Factory
     {
         return $this->state(fn () => [
             'status' => MonitorStatus::Down,
+            'consecutive_failures' => 1,
+            'first_failure_at' => now(),
             'last_checked_at' => now(),
             'last_status_code' => 500,
             'last_error' => 'Status 500',

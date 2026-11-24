@@ -6,6 +6,7 @@ Aplikasi sederhana untuk memantau uptime dan waktu respons website, dibangun den
 
 - Tambah, edit, jeda, dan hapus monitor (URL yang dipantau).
 - Pengecekan otomatis per monitor sesuai interval (1–1440 menit) lewat scheduler + queue.
+- **Anti alarm palsu**: website baru dianggap down setelah gagal N kali berturut-turut (default 2, bisa diatur per monitor). Selama menunggu konfirmasi, website dicek ulang tiap 1 menit.
 - Aturan "up": status HTTP < 400, atau sama persis dengan **status yang diharapkan**; opsional **kata kunci** yang wajib ada di isi halaman.
 - Mencatat status code, waktu respons (ms), dan pesan error tiap pengecekan.
 - Dashboard: ringkasan total/up/down, rata-rata respons, uptime 24 jam per monitor.
@@ -87,4 +88,4 @@ composer test
 
 ## Catatan
 
-Notifikasi dikirim begitu satu pengecekan gagal. Kalau website Anda sering timeout sesaat, naikkan nilai timeout pada monitor tersebut agar tidak terlalu banyak alarm palsu.
+Durasi down dihitung sejak kegagalan **pertama**, bukan sejak status terkonfirmasi down. Pemulihan langsung dianggap up setelah satu pengecekan sukses.

@@ -12,7 +12,7 @@
             </div>
             <a href="{{ $monitor->url }}" target="_blank" rel="noopener noreferrer" class="mt-1 block truncate text-sm text-zinc-500 hover:underline dark:text-zinc-400">{{ $monitor->url }}</a>
             <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                {{ $monitor->method }} · setiap {{ $monitor->interval_minutes }} menit · timeout {{ $monitor->timeout_seconds }} dtk
+                {{ $monitor->method }} · setiap {{ $monitor->interval_minutes }} menit · timeout {{ $monitor->timeout_seconds }} dtk · down setelah {{ $monitor->failure_threshold }}x gagal
                 @if ($monitor->expected_status) · harus status {{ $monitor->expected_status }} @endif
                 @if ($monitor->keyword) · kata kunci “{{ $monitor->keyword }}” @endif
                 @if ($monitor->status_changed_at) · status ini sejak {{ $monitor->status_changed_at->diffForHumans() }} @endif
@@ -33,6 +33,11 @@
     @if ($monitor->status === \App\Enums\MonitorStatus::Down && $monitor->last_error)
         <div class="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
             <span class="font-medium">Error terakhir:</span> {{ $monitor->last_error }}
+        </div>
+    @elseif ($monitor->is_active && $monitor->isAwaitingConfirmation())
+        <div class="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            <span class="font-medium">Gagal {{ $monitor->consecutive_failures }} dari {{ $monitor->failure_threshold }} kali, menunggu konfirmasi:</span> {{ $monitor->last_error }}
+            <span class="block text-xs opacity-80">Akan dicek ulang dalam ±1 menit. Notifikasi dikirim jika tetap gagal.</span>
         </div>
     @endif
 

@@ -65,11 +65,27 @@ class MonitorChecker
 
         $previous = $monitor->status;
         $previousChangedAt = $monitor->status_changed_at;
-        $current = $isUp ? MonitorStatus::Up : MonitorStatus::Down;
+
+        $failures = $isUp ? 0 : $monitor->consecutive_failures + 1;
+        $firstFailureAt = $isUp ? null : ($monitor->first_failure_at ?? $now);
+
+        // A failure only counts as "down" once it has happened
+        // failure_threshold times in a row; until then keep the current status.
+        $current = match (true) {
+            $isUp => MonitorStatus::Up,
+            $failures >= max(1, $monitor->failure_threshold) => MonitorStatus::Down,
+            default => $previous,
+        };
 
         $monitor->forceFill([
             'status' => $current,
-            'status_changed_at' => $previous === $current ? $monitor->status_changed_at : $now,
+            'status_changed_at' => match (true) {
+                $previous === $current => $monitor->status_changed_at,
+                $current === MonitorStatus::Down => $firstFailureAt,
+                default => $now,
+            },
+            'consecutive_failures' => $failures,
+            'first_failure_at' => $firstFailureAt,
             'last_checked_at' => $now,
             'last_status_code' => $statusCode,
             'last_response_time_ms' => $responseTime,

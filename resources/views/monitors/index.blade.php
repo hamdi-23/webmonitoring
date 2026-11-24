@@ -48,6 +48,8 @@
                                     <x-status-badge :status="$monitor->status" :active="$monitor->is_active" />
                                     @if ($monitor->status === \App\Enums\MonitorStatus::Down && $monitor->last_error)
                                         <div class="mt-1 max-w-xs truncate text-xs text-red-600 dark:text-red-400" title="{{ $monitor->last_error }}">{{ $monitor->last_error }}</div>
+                                    @elseif ($monitor->is_active && $monitor->isAwaitingConfirmation())
+                                        <div class="mt-1 max-w-xs truncate text-xs text-amber-600 dark:text-amber-400" title="{{ $monitor->last_error }}">Gagal {{ $monitor->consecutive_failures }}/{{ $monitor->failure_threshold }} · menunggu konfirmasi</div>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-right tabular-nums">{{ $monitor->last_response_time_ms !== null ? $monitor->last_response_time_ms.' ms' : '–' }}</td>

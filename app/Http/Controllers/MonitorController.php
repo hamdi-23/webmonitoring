@@ -88,9 +88,11 @@ class MonitorController extends Controller
 
         return back()->with(
             $check->is_up ? 'success' : 'error',
-            $check->is_up
-                ? "{$monitor->name} UP ({$check->response_time_ms} ms)."
-                : "{$monitor->name} DOWN: {$check->error}"
+            match (true) {
+                $check->is_up => "{$monitor->name} UP ({$check->response_time_ms} ms).",
+                $monitor->isAwaitingConfirmation() => "{$monitor->name} gagal ({$monitor->consecutive_failures}/{$monitor->failure_threshold}): {$check->error}",
+                default => "{$monitor->name} DOWN: {$check->error}",
+            }
         );
     }
 

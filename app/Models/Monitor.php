@@ -14,7 +14,7 @@ use Illuminate\Support\Carbon;
 
 #[Fillable([
     'name', 'url', 'method', 'expected_status', 'keyword',
-    'interval_minutes', 'timeout_seconds', 'is_active',
+    'interval_minutes', 'timeout_seconds', 'failure_threshold', 'is_active',
 ])]
 class Monitor extends Model
 {
@@ -25,6 +25,8 @@ class Monitor extends Model
         'method' => 'GET',
         'interval_minutes' => 5,
         'timeout_seconds' => 10,
+        'failure_threshold' => 2,
+        'consecutive_failures' => 0,
         'is_active' => true,
         'status' => 'pending',
     ];
@@ -39,6 +41,9 @@ class Monitor extends Model
             'expected_status' => 'integer',
             'interval_minutes' => 'integer',
             'timeout_seconds' => 'integer',
+            'failure_threshold' => 'integer',
+            'consecutive_failures' => 'integer',
+            'first_failure_at' => 'datetime',
         ];
     }
 
@@ -66,8 +71,20 @@ class Monitor extends Model
 
         $now ??= now();
 
+        // While a failure is waiting for confirmation, re-check after a minute
+        // instead of the full interval so real outages are confirmed quickly.
+        $minutes = $this->isAwaitingConfirmation() ? 1 : $this->interval_minutes;
+
         // Allow a small margin so a scheduler tick a few seconds early still counts.
-        return $this->last_checked_at->copy()->addMinutes($this->interval_minutes)->subSeconds(5)->lte($now);
+        return $this->last_checked_at->copy()->addMinutes($minutes)->subSeconds(5)->lte($now);
+    }
+
+    /**
+     * The last check(s) failed but not enough times in a row to mark it down.
+     */
+    public function isAwaitingConfirmation(): bool
+    {
+        return $this->consecutive_failures > 0 && $this->status !== MonitorStatus::Down;
     }
 
     /**

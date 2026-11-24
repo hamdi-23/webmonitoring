@@ -31,6 +31,7 @@ class MonitorRequest extends FormRequest
             'keyword' => ['nullable', 'string', 'max:255'],
             'interval_minutes' => ['required', 'integer', 'between:1,1440'],
             'timeout_seconds' => ['required', 'integer', 'between:1,60'],
+            'failure_threshold' => ['required', 'integer', 'between:1,10'],
             'is_active' => ['boolean'],
         ];
     }
@@ -45,6 +46,7 @@ class MonitorRequest extends FormRequest
             'keyword' => 'kata kunci',
             'interval_minutes' => 'interval',
             'timeout_seconds' => 'timeout',
+            'failure_threshold' => 'batas gagal',
         ];
     }
 }

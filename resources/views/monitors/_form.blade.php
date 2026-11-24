@@ -38,6 +38,13 @@
         </div>
     </div>
 
+    <div>
+        <label for="failure_threshold" class="{{ $label }}">Gagal berturut-turut sebelum dianggap down</label>
+        <input id="failure_threshold" name="failure_threshold" type="number" min="1" max="10" required value="{{ old('failure_threshold', $monitor->failure_threshold) }}" class="{{ $input }} sm:max-w-32">
+        <p class="{{ $hint }}">Mencegah alarm palsu karena gangguan sesaat. Setelah gagal, website dicek ulang tiap 1 menit sampai terkonfirmasi down atau pulih. Isi 1 untuk langsung dianggap down.</p>
+        @error('failure_threshold') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+    </div>
+
     <div class="grid gap-5 sm:grid-cols-2">
         <div>
             <label for="expected_status" class="{{ $label }}">Status HTTP yang diharapkan <span class="font-normal text-zinc-500">(opsional)</span></label>
