@@ -1,58 +1,66 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# WebMonitoring
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi sederhana untuk memantau uptime dan waktu respons website, dibangun dengan **Laravel 13**, PHP 8.3+, Vite 8, dan Tailwind CSS 4.
 
-## About Laravel
+## Fitur
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Tambah, edit, jeda, dan hapus monitor (URL yang dipantau).
+- Pengecekan otomatis per monitor sesuai interval (1–1440 menit) lewat scheduler + queue.
+- Aturan "up": status HTTP < 400, atau sama persis dengan **status yang diharapkan**; opsional **kata kunci** yang wajib ada di isi halaman.
+- Mencatat status code, waktu respons (ms), dan pesan error tiap pengecekan.
+- Dashboard: ringkasan total/up/down, rata-rata respons, uptime 24 jam per monitor.
+- Halaman detail: uptime 24 jam / 7 hari / 30 hari, grafik waktu respons, riwayat pengecekan.
+- Tombol **Cek sekarang** untuk pengecekan manual.
+- Perubahan status (up ↔ down) dicatat di log aplikasi.
+- Riwayat lama dihapus otomatis (default 30 hari, `MONITORING_RETENTION_DAYS`).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Instalasi
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer run setup
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Perintah di atas meng-install dependensi, membuat `.env`, generate key, migrasi database (SQLite secara default), dan build aset frontend.
 
-## Contributing
+## Menjalankan
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer run dev
+```
 
-## Code of Conduct
+Pengecekan otomatis membutuhkan **scheduler** dan **queue worker** berjalan. Di server produksi:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+# crontab
+* * * * * cd /path/ke/project && php artisan schedule:run >> /dev/null 2>&1
+```
 
-## Security Vulnerabilities
+```bash
+php artisan queue:work
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Perintah artisan
 
-## License
+| Perintah | Keterangan |
+|---|---|
+| `php artisan monitors:check` | Kirim job pengecekan untuk monitor yang sudah waktunya dicek |
+| `php artisan monitors:check --all` | Cek semua monitor aktif, abaikan interval |
+| `php artisan monitors:check --sync` | Jalankan langsung tanpa queue (cocok untuk debugging) |
+| `php artisan model:prune` | Hapus riwayat pengecekan yang lebih tua dari masa retensi |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Konfigurasi (`.env`)
+
+| Variabel | Default | Keterangan |
+|---|---|---|
+| `MONITORING_RETENTION_DAYS` | `30` | Lama riwayat pengecekan disimpan |
+| `MONITORING_USER_AGENT` | `WebMonitoring/1.0 (+uptime check)` | User-Agent yang dikirim saat mengecek |
+
+## Testing
+
+```bash
+composer test
+```
+
+## Catatan
+
+Belum ada autentikasi, jadi siapa pun yang bisa membuka aplikasi dapat mengubah monitor. Jangan expose ke internet publik tanpa menambahkan login (misalnya Laravel starter kit) atau proteksi di level web server.

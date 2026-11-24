@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Dispatch checks for every monitor whose interval has elapsed.
+Schedule::command('monitors:check')->everyMinute()->withoutOverlapping();
+
+// Remove check history older than MONITORING_RETENTION_DAYS.
+Schedule::command('model:prune')->daily();
