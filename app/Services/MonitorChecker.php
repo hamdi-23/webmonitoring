@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\MonitorStatus;
 use App\Models\Monitor;
 use App\Models\MonitorCheck;
+use App\Notifications\MonitorStatusChanged;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +14,8 @@ use Throwable;
 
 class MonitorChecker
 {
+    public function __construct(private MonitorAlerter $alerter) {}
+
     public function check(Monitor $monitor): MonitorCheck
     {
         $statusCode = null;
@@ -61,6 +64,7 @@ class MonitorChecker
         ]);
 
         $previous = $monitor->status;
+        $previousChangedAt = $monitor->status_changed_at;
         $current = $isUp ? MonitorStatus::Up : MonitorStatus::Down;
 
         $monitor->forceFill([
@@ -72,12 +76,24 @@ class MonitorChecker
             'last_error' => $error,
         ])->save();
 
-        if ($previous !== $current && $previous !== MonitorStatus::Pending) {
-            Log::warning("Monitor \"{$monitor->name}\" berubah status: {$previous->value} -> {$current->value}", [
+        if ($previous !== $current) {
+            Log::log($isUp ? 'info' : 'warning', "Monitor \"{$monitor->name}\" berubah status: {$previous->value} -> {$current->value}", [
                 'monitor_id' => $monitor->id,
                 'url' => $monitor->url,
                 'error' => $error,
             ]);
+
+            // Alert when a site goes down (including on its very first check),
+            // and when it recovers from being down — not for pending -> up.
+            if ($current === MonitorStatus::Down || $previous === MonitorStatus::Down) {
+                $this->alerter->send(new MonitorStatusChanged(
+                    monitor: $monitor,
+                    status: $current,
+                    error: $error,
+                    responseTimeMs: $responseTime,
+                    downSince: $current === MonitorStatus::Up ? $previousChangedAt : null,
+                ));
+            }
         }
 
         return $check;

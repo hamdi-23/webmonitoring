@@ -9,17 +9,26 @@
 <body class="min-h-screen bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     <header class="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-            <a href="{{ route('monitors.index') }}" class="flex items-center gap-2 font-semibold">
+            <a href="{{ auth()->check() ? route('monitors.index') : route('login') }}" class="flex items-center gap-2 font-semibold">
                 <span class="relative flex size-2.5">
                     <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60"></span>
                     <span class="relative inline-flex size-2.5 rounded-full bg-emerald-500"></span>
                 </span>
                 {{ config('app.name') }}
             </a>
-            <a href="{{ route('monitors.create') }}"
-               class="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200">
-                + Tambah monitor
-            </a>
+            @auth
+                <div class="flex items-center gap-3">
+                    <span class="hidden text-sm text-zinc-500 sm:inline dark:text-zinc-400">{{ auth()->user()->name }}</span>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button class="rounded-md px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800">Keluar</button>
+                    </form>
+                    <a href="{{ route('monitors.create') }}"
+                       class="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200">
+                        + Tambah monitor
+                    </a>
+                </div>
+            @endauth
         </div>
     </header>
 

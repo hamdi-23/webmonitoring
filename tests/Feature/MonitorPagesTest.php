@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Monitor;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -15,6 +16,7 @@ class MonitorPagesTest extends TestCase
     {
         parent::setUp();
         $this->withoutVite();
+        $this->actingAs(User::factory()->create());
     }
 
     public function test_home_redirects_to_dashboard(): void

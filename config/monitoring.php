@@ -6,4 +6,9 @@ return [
 
     // User-Agent sent with every check request.
     'user_agent' => env('MONITORING_USER_AGENT', 'WebMonitoring/1.0 (+uptime check)'),
+
+    'notify' => [
+        // Email every registered user when a monitor goes down or recovers.
+        'mail' => (bool) env('MONITORING_NOTIFY_MAIL', true),
+    ],
 ];
